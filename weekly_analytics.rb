@@ -34,30 +34,30 @@ user = Legato::User.new(access_token)
 property_ids = ENV['PROPERTY_IDS'].split(',')
 profiles = []
 user.profiles.each do |profile|
-	if property_ids.include?(profile.web_property.id)
-		profiles << profile
-	end
+  if property_ids.include?(profile.web_property.id)
+    profiles << profile
+  end
 end
 
 weeks = {}
-profiles.each do |profile|
-	User.results(profile, start_date: Date.parse(ENV['START_DATE']), sort: ['year_week']).each do |result|
-		weeks[result.yearWeek] = [] unless weeks[result.yearWeek]
-		weeks[result.yearWeek] << result.users.to_i
-	end
+  profiles.each do |profile|
+  User.results(profile, start_date: Date.parse(ENV['START_DATE']), sort: ['year_week']).each do |result|
+    weeks[result.yearWeek] = [] unless weeks[result.yearWeek]
+    weeks[result.yearWeek] << result.users.to_i
+  end
 end
 
 CSV.open(File.expand_path('../', __FILE__) + "/weekly_analytics.csv", "w") do |csv|
-	csv << ["week", "year", "start_date", "end_date", "total_users"]
-	weeks.each do |week_year, profiles|
-		year = week_year[0..3].to_i
-		week = week_year[4..5].to_i
-		# No idea why for 2016 Analytics thinks there were 53 weeks and Ruby thinks there were 52
-		week -= 1 if year == 2016
-		start_date = (Date.commercial(year, week, 1) - 1)
-		end_date = (Date.commercial(year, week, 7) - 1)
-		total_users = profiles.inject(:+)
-		csv << [week, year, start_date, end_date, total_users]
-		puts "#{week}/#{year} (from #{start_date} to #{end_date}) => #{total_users}"
-	end
+  csv << ["week", "year", "start_date", "end_date", "total_users"]
+  weeks.each do |week_year, profiles|
+    year = week_year[0..3].to_i
+    week = week_year[4..5].to_i
+    # No idea why for 2016 Analytics thinks there were 53 weeks and Ruby thinks there were 52
+    week -= 1 if year == 2016
+    start_date = (Date.commercial(year, week, 1) - 1)
+    end_date = (Date.commercial(year, week, 7) - 1)
+    total_users = profiles.inject(:+)
+    csv << [week, year, start_date, end_date, total_users]
+    puts "#{week}/#{year} (from #{start_date} to #{end_date}) => #{total_users}"
+  end
 end
